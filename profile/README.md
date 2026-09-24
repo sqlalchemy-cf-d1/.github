@@ -8,9 +8,9 @@ Welcome to the **CSCD01 Project** organization! This organization hosts all repo
 
 | Repository | Description |
 |------------|-------------|
-| `dbapi-d1` | Cloudflare D1 DBAPI 2.0 driver implementation. Handles communication with D1 via the Cloudflare API. |
-| `sqlalchemy-d1` | SQLAlchemy dialect for D1. Provides SQLAlchemy compatibility, reflection, and column type mapping. |
-| `superset-engine-d1` | Superset EngineSpec for D1. Integrates the D1 dialect into Superset, enabling datasets, charts, and dashboards. |
+| `dbapi-d1` | **Retired.** Cloudflare D1 DBAPI 2.0 driver implementation, used by `sqlalchemy-d1` 0.1.0. Replaced by the driver built into [sqlalchemy-cloudflare-d1](https://github.com/CollierKing/sqlalchemy-cloudflare-d1). |
+| `sqlalchemy-d1` | SQLAlchemy dialect for D1. Provides SQLAlchemy compatibility, reflection, and column type mapping. Since 0.2.0 it builds on [sqlalchemy-cloudflare-d1](https://github.com/CollierKing/sqlalchemy-cloudflare-d1) and supports SQLAlchemy 2.0. |
+| `superset-engine-d1` | **Retired.** Superset EngineSpec for D1. Superset 6.1.0 and newer ship their own D1 engine spec. |
 | `client` | Temporary test client for verifying DBAPI and engine functionality. |
 
 ---
@@ -36,8 +36,8 @@ Setup instructions can be found in [SETUP.md](../SETUP.md).
 ## Development Notes
 
 * The `D1Dialect` in `sqlalchemy-d1` handles schema reflection and type mapping for D1.
-* `superset-engine-d1` exposes `D1EngineSpec` for Superset.
-* DBAPI operations are implemented in `dbapi-d1`. Always use **parameterized queries** to avoid injection issues.
+* Superset ships the D1 engine spec itself, in `superset/db_engine_specs/d1.py`. `superset-engine-d1` is retired.
+* Since `sqlalchemy-d1` 0.2.0, DBAPI operations come from `sqlalchemy-cloudflare-d1`. `dbapi-d1` is retired. Always use **parameterized queries** to avoid injection issues.
 
 ---
 
