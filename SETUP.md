@@ -47,8 +47,8 @@ poetry --version
 [setup.sh](setup.sh) does steps 2, 3 and 5 of the manual setup **in the current directory**. It clones the repositories, puts `sqlalchemy-d1` on its 0.1.0 release, installs them, and creates and initializes Superset in `superset-engine-d1`.
 
 ```bash
-mkdir -p ~/dev/d01-project
-cd ~/dev/d01-project
+mkdir -p ~/dev/sqlalchemy-cf-d1
+cd ~/dev/sqlalchemy-cf-d1
 
 # Using curl
 bash <(curl -sSL https://raw.githubusercontent.com/sqlalchemy-cf-d1/.github/refs/heads/main/setup.sh)
@@ -66,8 +66,8 @@ Then run `cd superset-engine-d1` and continue at [6. Run Superset](#6-run-supers
 All repositories live side by side in one folder. Change the path for your system.
 
 ```bash
-mkdir -p ~/dev/d01-project
-cd ~/dev/d01-project
+mkdir -p ~/dev/sqlalchemy-cf-d1
+cd ~/dev/sqlalchemy-cf-d1
 ```
 
 ### 2. Clone the repositories
@@ -87,7 +87,7 @@ git -C sqlalchemy-d1 checkout v0.1.0
 Directory structure after cloning:
 
 ```
-d01-project/
+sqlalchemy-cf-d1/
  ├── dbapi-d1/
  ├── sqlalchemy-d1/
  └── superset-engine-d1/
@@ -190,7 +190,7 @@ The archived [client](https://github.com/sqlalchemy-cf-d1/client) repository has
 `client` installs `dbapi-d1` and `sqlalchemy-d1` from the local clones, so `sqlalchemy-d1` must be on the 0.1.0 release from [step 2](#2-clone-the-repositories). First run the SQL in the comment at the top of `src/client/main.py` in your D1 database's console. Then clone `client` next to the other repositories:
 
 ```bash
-cd ~/dev/d01-project
+cd ~/dev/sqlalchemy-cf-d1
 git clone https://github.com/sqlalchemy-cf-d1/client.git
 cd client
 poetry install
