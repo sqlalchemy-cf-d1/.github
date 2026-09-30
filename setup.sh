@@ -15,16 +15,20 @@ echo "✅ Verified required tools exist"
 
 echo "=== Step 1: Cloning repositories into $(pwd) ==="
 for repo in \
-  "git@github.com:CSCD01-Project/dbapi-d1.git" \
-  "git@github.com:CSCD01-Project/sqlalchemy-d1.git" \
-  "git@github.com:CSCD01-Project/superset-engine-d1.git"
+  "https://github.com/sqlalchemy-cf-d1/dbapi-d1.git" \
+  "https://github.com/sqlalchemy-cf-d1/sqlalchemy-d1.git" \
+  "https://github.com/sqlalchemy-cf-d1/superset-engine-d1.git"
 do
   name=$(basename "$repo" .git)
   if [ -d "$name" ]; then
-    echo "⚠️  $name already exists — skipping clone"
+    echo "⚠️  $name already exists, skipping clone"
   else
     echo "⏳ Cloning $name..."
     git clone "$repo"
+    # sqlalchemy-d1 main is now 0.2.x, use the 0.1.0 release
+    if [ "$name" = "sqlalchemy-d1" ]; then
+      git -C "$name" checkout -q v0.1.0
+    fi
     echo "✅ Cloned $name"
   fi
 done
@@ -56,7 +60,7 @@ if [ ! -f ".env" ]; then
   echo "FLASK_APP=superset.app:create_app()" > .env
   echo "✅ Created .env"
 else
-  echo "⚠️  .env exists — skipping"
+  echo "⚠️  .env exists, skipping"
 fi
 
 if [ ! -f "superset_config.py" ]; then
@@ -66,7 +70,7 @@ SQLALCHEMY_DATABASE_URI = "sqlite:////tmp/superset.db"
 EOF
   echo "✅ Created superset_config.py"
 else
-  echo "⚠️  superset_config.py exists — skipping"
+  echo "⚠️  superset_config.py exists, skipping"
 fi
 
 echo "=== Step 4: Running Superset Setup (in superset-engine-d1) ==="
@@ -81,7 +85,7 @@ poetry run superset fab create-admin \
   --firstname Superset \
   --lastname Admin \
   --email admin@example.com \
-  --password admin || echo "⚠️ Admin likely exists — continuing"
+  --password admin || echo "⚠️ Admin likely exists, continuing"
 
 echo "⏳ Initializing superset..."
 poetry run superset init
