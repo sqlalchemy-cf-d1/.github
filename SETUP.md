@@ -1,63 +1,87 @@
-# Cloudflare D1 Development Environment Setup
+<div align="center">
 
-This guide is for setting up the development environment for the Cloudflare D1 Database integration with Apache Superset. It covers cloning all repositories, setting up Python, and installing dependencies.
+# Legacy development setup
 
-### 0. Installation Requirements
+The original setup guide for the **0.1.0** stack, with all repositories and a local **Apache Superset**.
 
-This project assumes you already have `poetry` and `pyenv` with python `3.11.13` installed. If not:
+[Which guide?](#which-guide) · [Requirements](#requirements) · [Setup script](#setup-script) · [Manual setup](#manual-setup) · [Connect to D1](#connect-superset-to-d1) · [Test client](#test-client)
 
-##### [PyEnv Install Instructions](https://github.com/pyenv/pyenv?tab=readme-ov-file#installation)
-##### Install Python 3.11.13
+</div>
+
+<br>
+
+> [!WARNING]
+> **This guide is legacy.** It is kept for reference and is not the main setup guide. It sets up the **0.1.0** stack from before Superset 6.1.0 shipped its own D1 engine spec. `dbapi-d1`, `superset-engine-d1` and `client` are archived.
+
+## Which guide?
+
+| You want to | Use |
+|-------------|-----|
+| Connect Superset to D1 | [Quick start](profile/README.md#quick-start) in the org README |
+| Work on `sqlalchemy-d1` | [Development](https://github.com/sqlalchemy-cf-d1/sqlalchemy-d1#development) in the sqlalchemy-d1 README |
+| Run the 0.1.0 stack with a local Superset | This guide |
+
+## What it sets up
+
+| Repository | Status | Role in the 0.1.0 stack |
+|------------|--------|-------------------------|
+| [**dbapi-d1**](https://github.com/sqlalchemy-cf-d1/dbapi-d1) | Archived | DBAPI 2.0 driver for D1. |
+| [**sqlalchemy-d1**](https://github.com/sqlalchemy-cf-d1/sqlalchemy-d1) | Active | SQLAlchemy 1.4 dialect for D1. Its `main` branch is now 0.2.x, see [step 2](#2-clone-the-repositories). |
+| [**superset-engine-d1**](https://github.com/sqlalchemy-cf-d1/superset-engine-d1) | Archived | Superset EngineSpec for D1. Also runs the local Superset. |
+| [**client**](https://github.com/sqlalchemy-cf-d1/client) | Archived | Test script for the driver and the dialect. |
+
+## Requirements
+
+* **Python 3.11**, installed with [pyenv](https://github.com/pyenv/pyenv?tab=readme-ov-file#installation). The 0.1.0 packages do not support other versions.
+* **Poetry**
+
 ```bash
 pyenv install 3.11.13
-```
-##### Install Poetry
-```bash
 curl -sSL https://install.python-poetry.org | python3 -
 exec $SHELL
 poetry --version
 ```
 
----
+## Setup script
 
+[setup.sh](setup.sh) does steps 2, 3 and 5 of the manual setup **in the current directory**. It clones the repositories, puts `sqlalchemy-d1` on its 0.1.0 release, installs them, and creates and initializes Superset in `superset-engine-d1`.
 
-### 1. Create a main project directory
+```bash
+mkdir -p ~/dev/d01-project
+cd ~/dev/d01-project
 
-Choose a location to hold both projects (change for your system):
+# Using curl
+bash <(curl -sSL https://raw.githubusercontent.com/sqlalchemy-cf-d1/.github/refs/heads/main/setup.sh)
+
+# Using wget
+bash <(wget -qO- https://raw.githubusercontent.com/sqlalchemy-cf-d1/.github/refs/heads/main/setup.sh)
+```
+
+Then run `cd superset-engine-d1` and continue at [6. Run Superset](#6-run-superset).
+
+## Manual setup
+
+### 1. Create a project directory
+
+All repositories live side by side in one folder. Change the path for your system.
 
 ```bash
 mkdir -p ~/dev/d01-project
 cd ~/dev/d01-project
 ```
 
-After this, all repositories will live under this folder.
-
----
-
-### 1.5 Setup Script
-
-The setup script found in [setup.sh](./setup.sh) will automatically execute steps 2-6 **in the current working directory**. It requires you to:
-1. Have CLI logged into github with ssh access set up (`git clone git@github.com:...` works)
-2. Have all dependencies in step 0 installed.
+### 2. Clone the repositories
 
 ```bash
-cd ~/dev/d01-project # Ensure you are in correct working directory
-
-# Using curl
-source <(curl -sSL https://raw.githubusercontent.com/CSCD01-Project/.github/refs/heads/main/setup.sh)
-
-# Using wget
-source <(wget -qO- https://raw.githubusercontent.com/CSCD01-Project/.github/refs/heads/main/setup.sh)
+git clone https://github.com/sqlalchemy-cf-d1/dbapi-d1.git
+git clone https://github.com/sqlalchemy-cf-d1/sqlalchemy-d1.git
+git clone https://github.com/sqlalchemy-cf-d1/superset-engine-d1.git
 ```
 
----
-
-### 2. Clone repos
+The `main` branch of `sqlalchemy-d1` is now 0.2.x. For the 0.1.0 code, check out its release tag:
 
 ```bash
-git clone git@github.com:CSCD01-Project/dbapi-d1.git
-git clone git@github.com:CSCD01-Project/sqlalchemy-d1.git
-git clone git@github.com:CSCD01-Project/superset-engine-d1.git
+git -C sqlalchemy-d1 checkout v0.1.0
 ```
 
 Directory structure after cloning:
@@ -69,68 +93,49 @@ d01-project/
  └── superset-engine-d1/
 ```
 
----
+### 3. Install dependencies
 
-### 3. Install dependencies with Poetry
-
-For each repository:
+Each repository gets its own virtual environment.
 
 ```bash
 cd dbapi-d1
-poetry env activate
 poetry install
 
 cd ../sqlalchemy-d1
-poetry env activate
 poetry install
 
 cd ../superset-engine-d1
-poetry env activate
 poetry install
 ```
 
-This will create a virtual environment for each project and install all dependencies.
+### 4. Check where the packages come from
 
----
+At 0.1.0, `sqlalchemy-d1` and `superset-engine-d1` install the other packages from **PyPI**, not from the local clones. Changes in `dbapi-d1` or `sqlalchemy-d1` do not reach Superset until they are published. Only `client` uses the local clones.
 
-### 4. Verify dependency linkage
-
-From `sqlalchemy-d1`:
+From `superset-engine-d1`:
 
 ```bash
-poetry show dbapi-d1
+poetry show sqlalchemy-d1
 ```
 
-It should display the local path (`../dbapi-d1`) and confirm it is editable.
+It should show version `0.1.0`.
 
-From `superset-engine-d1`
+### 5. Set up Superset
 
-```bash
-poetry show 
-```
-
-It should display `../sqlalchemy-d1` in the dependency list.
-
----
-
-### 5. Setting up Superset
-
-You are able to run superset directly from the `superset-engine-d1` repository. 
-
-First, you will need to create `.env` and `superset_config.py` files in the root, with a secure key.
+Superset runs from the `superset-engine-d1` repository. Create two files in its root:
 
 ```env
 # superset-engine-d1/.env
 FLASK_APP=superset.app:create_app()
 ```
 
-```env
+```python
 # superset-engine-d1/superset_config.py
 SECRET_KEY = "<generate secure key>"
 SQLALCHEMY_DATABASE_URI = "sqlite:////tmp/superset.db"
 ```
 
-Then you will need to run a few setup steps. These initialize superset.
+Generate the key with `openssl rand -hex 16`. Then initialize Superset:
 
 ```bash
 export SUPERSET_CONFIG_PATH="$(pwd)/superset_config.py"
@@ -144,70 +149,75 @@ poetry run superset fab create-admin \
 poetry run superset init
 ```
 
-After this, you can run the superset server
-
-### 6. Running Superset
+### 6. Run Superset
 
 ```bash
 export SUPERSET_CONFIG_PATH="$(pwd)/superset_config.py"
 poetry run superset run -p 8088 --with-threads --reload --debugger
 ```
 
+Superset is now at `http://localhost:8088`.
+
 > [!IMPORTANT]
-> Remember that any time you start in a new shell, you will need to run `export SUPERSET_CONFIG_PATH="$(pwd)/superset_config.py"` again, or the server will not work.
+> Run the `export SUPERSET_CONFIG_PATH=...` line again in every new shell, or the server will not work.
 
-### 7. Connecting Superset to D1
+## Connect Superset to D1
 
-> [!NOTE]
-> This step requires you to have an active Cloudflare account with a D1 database. You will need the following:
-> 1. Your Cloudflare ACCOUNT_ID
-> 2. A [Cloudflare access token](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/) with D1 read permissions.
-> 3. Your D1 Database D1_DB_ID
-> 4. The database should be populated with some sample data. You can directly access the SQL console for the database from the Cloudflare D1 dashboard for it. You can run `CREATE TABLE` and `INSERT` commands accordingly.
+You need:
 
-Opening the local superset server, follow these steps:
-1. Login with credentials (user and password both `admin`, assuming you followed above)
-2. Click `Settings -> Database Connections` in top-right corner
-3. Click `+ Database` in top-right corner
-4. `Choose a database -> Other`
-5. Fill in URL with the following format: `d1://<CF_ACCOUNT_ID>:<CF_API_TOKEN>@<D1_DB_ID>`
-6. Click test connection and make sure it works. Then click connect.
-7. Click `+ -> Data -> Create Dataset` in top-right corner
-8. `Database -> D1`, `Schema -> Main`, `Table -> <your table>`
-9. Select a chart that applies for your data. It should preview accordingly.
+* Your Cloudflare **account ID**
+* A Cloudflare [**API token**](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/) with D1 read permission
+* Your D1 **database ID**
+* Some sample data in the database. Run `CREATE TABLE` and `INSERT` statements in the database's console on the Cloudflare D1 dashboard.
 
-If everything works, the setup was successful. If anything breaks, check the logs for the server.
+In the local Superset:
 
----
+1. Log in. The user and password are both `admin` if you followed the steps above.
+2. Open **Settings > Database Connections > + Database**.
+3. In **Choose a database**, pick **Other**.
+4. Fill in the SQLAlchemy URI as `d1://<CF_ACCOUNT_ID>:<CF_API_TOKEN>@<D1_DB_ID>`.
+5. Click **Test Connection**. When it works, click **Connect**.
+6. Open **+ > Data > Create Dataset**.
+7. Pick **D1** as the database, **main** as the schema, and your table.
+8. Pick a chart that fits your data. It should show a preview.
 
-### 8. Running Tests
+If this works, the setup is done. If anything breaks, check the server logs.
 
-The `client` repository is configured with a `main` script intended to test basic functionality. You can use this to ensure the packages are working correctly. You will need to create a D1 Database, run the SQL commands provided in the comments at the top of `main.py`, and add the appropriate credentials to a `.env` file.
+## Test client
+
+The archived [client](https://github.com/sqlalchemy-cf-d1/client) repository has a `main` script that checks the driver and the dialect against a real D1 database. It has been replaced by the unit and integration tests in `sqlalchemy-d1`.
+
+`client` installs `dbapi-d1` and `sqlalchemy-d1` from the local clones, so `sqlalchemy-d1` must be on the 0.1.0 release from [step 2](#2-clone-the-repositories). First run the SQL in the comment at the top of `src/client/main.py` in your D1 database's console. Then clone `client` next to the other repositories:
 
 ```bash
-git clone git@github.com:CSCD01-Project/client.git
+cd ~/dev/d01-project
+git clone https://github.com/sqlalchemy-cf-d1/client.git
 cd client
-poetry env activate
 poetry install
-touch .env # Add credentials
+```
+
+Copy the sample credentials file and fill in `CF_ACCOUNT_ID`, `CF_API_TOKEN` and `D1_DB_ID`:
+
+```bash
+cp .env.sample .env
+```
+
+Run it:
+
+```bash
 poetry run client
 ```
 
 > [!WARNING]
-> To run the main script, you must do so **through poetry**. Running with `python src/client/main.py` on its own will not correctly resolve the packages.
+> Run the script **through Poetry**. `python src/client/main.py` on its own does not find the packages.
 
-This is a temporary repository. We should aim to fully replace this testing, and add a lot more, with appropriate individual unit tests in each respository.
+## Tests
 
-### Misc
-
-> [!TODO]
-> Tests are not yet written, these will come later on
-
-Run tests with:
+Each repository has its own unit tests:
 
 ```bash
 poetry run pytest
 ```
 
 > [!NOTE]
-> Make sure editors/IDEs use the Poetry-managed virtual environment for linting and execution.
+> Make sure editors and IDEs use the Poetry virtual environment of each repository for linting and running code.
